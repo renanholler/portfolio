@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "title": "Renan Holler — Engenheiro de Software Full Stack",
+    "description": "Engenheiro de Software Full Stack com 7 anos de experiência construindo aplicações web escaláveis, de plataformas do setor público que atendem milhões de usuários a produtos full-stack modernos."
+  },
+  "nav": {
+    "main": "Principal",
+    "about": "Sobre",
+    "projects": "Projetos",
+    "experience": "Experiência",
+    "contact": "Contato",
+    "home": "Renan Holler — Início",
+    "menu": "Menu"
+  },
+  "hero": {
+    "role": "Engenheiro de Software Full Stack",
+    "bio": "7 anos construindo produtos escaláveis — de plataformas do setor público que atendem milhões de usuários a aplicações full-stack modernas.",
+    "location": "Brasil (GMT-3)",
+    "bookCall": "Agendar call"
+  },
+  "about": {
+    "title": "Sobre",
+    "bio": "Engenheiro de Software Full Stack com 7 anos de experiência construindo aplicações web escaláveis. Sólida formação em arquitetura de software, desenvolvimento full-stack, otimização de banco de dados e fluxos de engenharia assistidos por IA. Experiência entregando soluções críticas em plataformas do setor público que atendem milhões de usuários e em ambientes de startup de ritmo acelerado. Atualmente cursando MBA em Engenharia de Software com IA.",
+    "stats": {
+      "yearsValue": "7+",
+      "years": "Anos de experiência",
+      "focusValue": "Full Stack",
+      "focus": "Foco",
+      "mbaValue": "MBA",
+      "mba": "Eng. de Software com IA"
+    },
+    "skillsTitle": "Habilidades",
+    "skillsPrev": "Habilidades anteriores",
+    "skillsNext": "Próximas habilidades"
+  },
+  "projects": {
+    "title": "Projetos.",
+    "lede": "Trabalhos selecionados em produção — dashboards e plataformas.",
+    "closeProject": "Fechar projeto",
+    "previousProject": "Projeto anterior",
+    "nextProject": "Próximo projeto"
+  },
+  "experience": {
+    "title": "Experiência"
+  },
+  "contact": {
+    "title": "Contato",
+    "pickDate": "1. Escolha uma data",
+    "pickTime": "2. Escolha um horário",
+    "confirm": "3. Confirmar",
+    "timesShownIn": "Horários exibidos em {timezone}.",
+    "calendarNote": "Confirmação e link da videochamada enviados por e-mail.",
+    "confirmNote": "Você receberá um e-mail de renan@hollercode.dev com a confirmação e o link do Google Meet.",
+    "loadingSlots": "Carregando horários disponíveis…",
+    "availabilityError": "Não foi possível carregar os horários agora.",
+    "retry": "Tentar novamente",
+    "noSlots": "Não há horários disponíveis neste momento.",
+    "noSlotsForDate": "Não há horários livres nesta data.",
+    "formName": "Nome",
+    "formEmail": "E-mail",
+    "formMessage": "Mensagem (opcional)",
+    "formMessagePlaceholder": "Sobre o que você quer conversar?",
+    "confirmBooking": "Confirmar agendamento",
+    "bookingSuccessTitle": "Agendamento confirmado",
+    "bookingSuccessBody": "Enviamos a confirmação para {email} com o link da videochamada e um arquivo de calendário.",
+    "bookingError": "Não foi possível confirmar o agendamento. Tente novamente.",
+    "slotUnavailable": "Esse horário acabou de ficar indisponível. Escolha outro."
+  },
+  "errors": {
+    "title": "Esta página não carregou",
+    "description": "Algo deu errado do nosso lado. Você pode tentar atualizar ou voltar para a página inicial.",
+    "tryAgain": "Tentar novamente",
+    "goHome": "Ir para início"
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "description": "A página que você procura não existe ou foi movida.",
+    "goHome": "Ir para início"
+  }
+}

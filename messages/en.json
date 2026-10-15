@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "title": "Renan Holler — Full Stack Software Engineer",
+    "description": "Full Stack Software Engineer with 7 years of experience building scalable web applications, from public-sector platforms serving millions to modern full-stack products."
+  },
+  "nav": {
+    "main": "Main",
+    "about": "About",
+    "projects": "Projects",
+    "experience": "Experience",
+    "contact": "Contact",
+    "home": "Renan Holler — Home",
+    "menu": "Menu"
+  },
+  "hero": {
+    "role": "Full Stack Software Engineer",
+    "bio": "7 years building scalable products — from public-sector platforms serving millions of users to modern full-stack applications.",
+    "location": "Brazil (GMT-3)",
+    "bookCall": "Book a call"
+  },
+  "about": {
+    "title": "About",
+    "bio": "Full Stack Software Engineer with 7 years of experience building scalable web applications. Strong background in software architecture, full-stack development, database optimization, and AI-assisted engineering workflows. Experienced delivering business-critical solutions across public-sector platforms serving millions of users and fast-paced startup environments. Currently pursuing an MBA in Software Engineering with AI.",
+    "stats": {
+      "yearsValue": "7+",
+      "years": "Years of Experience",
+      "focusValue": "Full Stack",
+      "focus": "Focus",
+      "mbaValue": "MBA",
+      "mba": "Software Engineering with AI"
+    },
+    "skillsTitle": "Skills",
+    "skillsPrev": "Previous skills",
+    "skillsNext": "Next skills"
+  },
+  "projects": {
+    "title": "Projects.",
+    "lede": "Selected work in production — dashboards and platforms.",
+    "closeProject": "Close project",
+    "previousProject": "Previous project",
+    "nextProject": "Next project"
+  },
+  "experience": {
+    "title": "Experience"
+  },
+  "contact": {
+    "title": "Contact",
+    "pickDate": "1. Pick a date",
+    "pickTime": "2. Pick a time",
+    "confirm": "3. Confirm",
+    "timesShownIn": "Times shown in {timezone}.",
+    "calendarNote": "Confirmation and video call link sent by email.",
+    "confirmNote": "You'll receive an email from renan@hollercode.dev with confirmation and the Google Meet link.",
+    "loadingSlots": "Loading available times…",
+    "availabilityError": "Couldn't load available times right now.",
+    "retry": "Try again",
+    "noSlots": "No available times at the moment.",
+    "noSlotsForDate": "No open times on this date.",
+    "formName": "Name",
+    "formEmail": "Email",
+    "formMessage": "Message (optional)",
+    "formMessagePlaceholder": "What would you like to talk about?",
+    "confirmBooking": "Confirm booking",
+    "bookingSuccessTitle": "Booking confirmed",
+    "bookingSuccessBody": "We sent a confirmation to {email} with the video call link and a calendar file.",
+    "bookingError": "Couldn't confirm the booking. Please try again.",
+    "slotUnavailable": "That time slot just became unavailable. Please pick another one."
+  },
+  "errors": {
+    "title": "This page didn't load",
+    "description": "Something went wrong on our end. You can try refreshing or head back home.",
+    "tryAgain": "Try again",
+    "goHome": "Go home"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "goHome": "Go home"
+  }
+}
