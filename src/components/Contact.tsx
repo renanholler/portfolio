@@ -1,5 +1,6 @@
 "use client";
 
+import { LocaleFade } from "@/components/LocaleFade";
 import { Reveal, SectionHeading } from "@/components/Reveal";
 import { getPortfolio } from "@/data/get-portfolio";
 import { social } from "@/data/portfolio";
@@ -59,12 +60,18 @@ function DateButton({
         onChange={onSelect}
         className="sr-only"
       />
-      <span className="text-fine-print leading-[1.33] opacity-80">
-        {formatWeekday(date, intlLocale)}
-      </span>
-      <span className="mt-1 font-display text-[17px] leading-[1.2] font-semibold tracking-[-0.374px]">
-        {formatMonthDay(date, intlLocale)}
-      </span>
+      <LocaleFade
+        block
+        fadeKey={`contact-weekday-${dateValue(date)}`}
+        text={formatWeekday(date, intlLocale)}
+        className="text-fine-print leading-[1.33] opacity-80"
+      />
+      <LocaleFade
+        block
+        fadeKey={`contact-monthday-${dateValue(date)}`}
+        text={formatMonthDay(date, intlLocale)}
+        className="mt-1 font-display text-[17px] leading-[1.2] font-semibold tracking-[-0.374px]"
+      />
     </label>
   );
 }
@@ -96,7 +103,7 @@ function TimeButton({
         onChange={onSelect}
         className="sr-only"
       />
-      {formatTimeLabel(time, intlLocale)}
+      <LocaleFade fadeKey={`contact-time-${time}`} text={formatTimeLabel(time, intlLocale)} />
     </label>
   );
 }
@@ -220,15 +227,26 @@ function ContactScheduler({
     const date = availableDates.find((item) => dateValue(item) === selectedDateKey);
     return (
       <div className="mt-10 rounded-lg border border-hairline bg-card px-5 py-8 desktop:mt-12 desktop:px-8 desktop:py-10">
-        <p className="text-tagline">{t("bookingSuccessTitle")}</p>
+        <LocaleFade
+          as="p"
+          fadeKey="contact-success-title"
+          text={t("bookingSuccessTitle")}
+          className="text-tagline"
+        />
         {date && (
-          <p className="mt-3 text-body text-ink-muted">
-            {formatFullDate(date, intlLocale)} · {formatTimeLabel(selectedTime, intlLocale)}
-          </p>
+          <LocaleFade
+            as="p"
+            fadeKey="contact-success-when"
+            text={`${formatFullDate(date, intlLocale)} · ${formatTimeLabel(selectedTime, intlLocale)}`}
+            className="mt-3 text-body text-ink-muted"
+          />
         )}
-        <p className="mt-4 max-w-xl text-body leading-[1.53] text-foreground">
-          {t("bookingSuccessBody", { email })}
-        </p>
+        <LocaleFade
+          as="p"
+          fadeKey="contact-success-body"
+          text={t("bookingSuccessBody", { email })}
+          className="mt-4 max-w-xl text-body leading-[1.53] text-foreground"
+        />
       </div>
     );
   }
@@ -236,25 +254,33 @@ function ContactScheduler({
   return (
     <div className="mt-10 overflow-hidden rounded-lg border border-hairline bg-card desktop:mt-12 desktop:grid desktop:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
       <aside className="border-b border-hairline px-5 py-6 desktop:border-r desktop:border-b-0 desktop:px-6 desktop:py-7">
-        <p className="text-tagline">{scheduling.eventTitle}</p>
+        <LocaleFade
+          as="p"
+          fadeKey="contact-event-title"
+          text={scheduling.eventTitle}
+          className="text-tagline"
+        />
         <ul className="mt-5 space-y-4">
           <li className="flex items-start gap-3 text-caption text-ink-muted">
             <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {scheduling.durationLabel}
+            <LocaleFade block fadeKey="contact-duration" text={scheduling.durationLabel} />
           </li>
           <li className="flex items-start gap-3 text-caption text-ink-muted">
             <Video className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {scheduling.location}
+            <LocaleFade block fadeKey="contact-location" text={scheduling.location} />
           </li>
           <li className="flex items-start gap-3 text-caption text-ink-muted">
             <Calendar className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {t("calendarNote")}
+            <LocaleFade block fadeKey="contact-calendar-note" text={t("calendarNote")} />
           </li>
         </ul>
 
-        <p className="mt-6 text-fine-print leading-[1.4] text-muted-foreground">
-          {t("timesShownIn", { timezone: scheduling.timezoneLabel })}
-        </p>
+        <LocaleFade
+          as="p"
+          fadeKey="contact-times-in"
+          text={t("timesShownIn", { timezone: scheduling.timezoneLabel })}
+          className="mt-6 text-fine-print leading-[1.4] text-muted-foreground"
+        />
 
         <div className="mt-8 space-y-3 border-t border-hairline pt-6">
           <a
@@ -289,7 +315,7 @@ function ContactScheduler({
         {loadingAvailability ? (
           <div className="flex min-h-48 items-center justify-center gap-3 text-body text-ink-muted">
             <Loader2 className="size-5 animate-spin" aria-hidden />
-            {t("loadingSlots")}
+            <LocaleFade fadeKey="contact-loading" text={t("loadingSlots")} />
           </div>
         ) : availabilityError ? (
           <div className="rounded-[14px] border border-hairline bg-card p-5">
@@ -299,17 +325,25 @@ function ContactScheduler({
               onClick={() => void loadAvailability()}
               className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-hairline bg-card px-5 text-[15px] font-medium tracking-[-0.24px] text-foreground"
             >
-              {t("retry")}
+              <LocaleFade fadeKey="contact-retry" text={t("retry")} />
             </button>
           </div>
         ) : availableDates.length === 0 ? (
-          <p className="text-body text-ink-muted">{t("noSlots")}</p>
+          <LocaleFade
+            as="p"
+            fadeKey="contact-no-slots"
+            text={t("noSlots")}
+            className="text-body text-ink-muted"
+          />
         ) : (
           <>
             <div>
-              <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-                {t("pickDate")}
-              </p>
+              <LocaleFade
+                as="p"
+                fadeKey="contact-pick-date"
+                text={t("pickDate")}
+                className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground"
+              />
               <div className="no-scrollbar -mx-5 mt-4 overflow-x-auto px-5 pb-1 desktop:-mx-6 desktop:px-6">
                 <div className="flex w-max gap-2">
                   {availableDates.map((date) => {
@@ -334,11 +368,19 @@ function ContactScheduler({
             </div>
 
             <div className="mt-8">
-              <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-                {t("pickTime")}
-              </p>
+              <LocaleFade
+                as="p"
+                fadeKey="contact-pick-time"
+                text={t("pickTime")}
+                className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground"
+              />
               {slotsForSelectedDate.length === 0 ? (
-                <p className="mt-4 text-body text-ink-muted">{t("noSlotsForDate")}</p>
+                <LocaleFade
+                  as="p"
+                  fadeKey="contact-no-slots-date"
+                  text={t("noSlotsForDate")}
+                  className="mt-4 text-body text-ink-muted"
+                />
               ) : (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {slotsForSelectedDate.map((time) => (
@@ -363,22 +405,36 @@ function ContactScheduler({
                 onSubmit={handleSubmit}
                 className="mt-8 rounded-[14px] border border-hairline bg-card p-5 desktop:p-6"
               >
-                <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("confirm")}
-                </p>
-                <p className="mt-3 text-tagline">
-                  {formatFullDate(
+                <LocaleFade
+                  as="p"
+                  fadeKey="contact-confirm"
+                  text={t("confirm")}
+                  className="text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground"
+                />
+                <LocaleFade
+                  as="p"
+                  fadeKey="contact-confirm-date"
+                  text={formatFullDate(
                     availableDates.find((date) => dateValue(date) === selectedDateKey)!,
                     intlLocale,
                   )}
-                </p>
-                <p className="mt-1 text-body text-ink-muted">
-                  {formatTimeLabel(selectedTime, intlLocale)} · {scheduling.durationLabel}
-                </p>
+                  className="mt-3 text-tagline"
+                />
+                <LocaleFade
+                  as="p"
+                  fadeKey="contact-confirm-slot"
+                  text={`${formatTimeLabel(selectedTime, intlLocale)} · ${scheduling.durationLabel}`}
+                  className="mt-1 text-body text-ink-muted"
+                />
 
                 <div className="mt-6 grid gap-4">
                   <label className="grid gap-2">
-                    <span className="text-fine-print text-muted-foreground">{t("formName")}</span>
+                    <LocaleFade
+                      block
+                      fadeKey="contact-form-name"
+                      text={t("formName")}
+                      className="text-fine-print text-muted-foreground"
+                    />
                     <input
                       type="text"
                       name="name"
@@ -392,7 +448,12 @@ function ContactScheduler({
                   </label>
 
                   <label className="grid gap-2">
-                    <span className="text-fine-print text-muted-foreground">{t("formEmail")}</span>
+                    <LocaleFade
+                      block
+                      fadeKey="contact-form-email"
+                      text={t("formEmail")}
+                      className="text-fine-print text-muted-foreground"
+                    />
                     <input
                       type="email"
                       name="email"
@@ -405,9 +466,12 @@ function ContactScheduler({
                   </label>
 
                   <label className="grid gap-2">
-                    <span className="text-fine-print text-muted-foreground">
-                      {t("formMessage")}
-                    </span>
+                    <LocaleFade
+                      block
+                      fadeKey="contact-form-message"
+                      text={t("formMessage")}
+                      className="text-fine-print text-muted-foreground"
+                    />
                     <textarea
                       name="message"
                       rows={4}
@@ -425,20 +489,31 @@ function ContactScheduler({
                   </p>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={bookingStatus === "submitting"}
-                  className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-5 text-[15px] font-medium tracking-[-0.24px] text-primary-foreground disabled:opacity-60 desktop:text-[17px] desktop:tracking-[-0.374px]"
+                <LocaleFade
+                  fadeKey="contact-confirm-booking"
+                  text={t("confirmBooking")}
+                  className="inline-flex"
                 >
-                  {bookingStatus === "submitting" && (
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  {(label) => (
+                    <button
+                      type="submit"
+                      disabled={bookingStatus === "submitting"}
+                      className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-5 text-[15px] font-medium tracking-[-0.24px] text-primary-foreground disabled:opacity-60 desktop:text-[17px] desktop:tracking-[-0.374px]"
+                    >
+                      {bookingStatus === "submitting" && (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      )}
+                      {label}
+                    </button>
                   )}
-                  {t("confirmBooking")}
-                </button>
+                </LocaleFade>
 
-                <p className="mt-4 text-fine-print leading-[1.4] text-muted-foreground">
-                  {t("confirmNote")}
-                </p>
+                <LocaleFade
+                  as="p"
+                  fadeKey="contact-confirm-note"
+                  text={t("confirmNote")}
+                  className="mt-4 text-fine-print leading-[1.4] text-muted-foreground"
+                />
               </form>
             )}
           </>
@@ -464,9 +539,12 @@ export function Contact() {
           <SectionHeading id="contact" title={t("title")} />
         </Reveal>
         <Reveal delay={0.05}>
-          <p className="max-w-2xl text-body leading-[1.53] text-foreground desktop:leading-[1.47]">
-            {schedulingCopy.intro}
-          </p>
+          <LocaleFade
+            as="p"
+            fadeKey="contact-intro"
+            text={schedulingCopy.intro}
+            className="max-w-2xl text-body leading-[1.53] text-foreground desktop:leading-[1.47]"
+          />
         </Reveal>
 
         <Reveal delay={0.1}>

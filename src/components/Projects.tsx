@@ -1,5 +1,6 @@
 "use client";
 
+import { LocaleFade } from "@/components/LocaleFade";
 import { getPortfolio } from "@/data/get-portfolio";
 import type { Project } from "@/data/portfolio";
 import type { Locale } from "@/i18n/routing";
@@ -25,60 +26,120 @@ const projectSources: Record<string, StaticImageData> = {
   "/unnichat.png": unnichat,
 };
 
-const layoutDrawer = { type: "spring" as const, visualDuration: 0.35, bounce: 0.1 };
-const revealSpring = { type: "spring" as const, visualDuration: 0.7, bounce: 0.16 };
-const swapEase = [0.645, 0.045, 0.355, 1] as const;
-const REVEAL_DELAY_MS = 250;
+// Apple's product-viewer spring: stiffness = (2π/duration)², damping = (1−bounce)·4π/duration.
+function appleSpring(duration: number, bounce: number) {
+  const omega = (2 * Math.PI) / duration;
+  return {
+    type: "spring" as const,
+    stiffness: omega * omega,
+    damping: (1 - bounce) * 2 * omega,
+    mass: 1,
+  };
+}
+
+const easeInOut = [0.42, 0, 0.58, 1] as const;
+const easeOut = [0, 0, 0.58, 1] as const;
+const cardOpen = appleSpring(0.5, 0.42);
+const cardSwap = appleSpring(0.5, 0.16);
+const cardClose = appleSpring(0.32, 0);
+const scaleIn = appleSpring(0.63, 0.39);
+const scaleMove = appleSpring(0.63, 0);
+const fadeMove = appleSpring(0.32, 0);
+const CONTENT_OFFSET = 28;
+const REVEAL_DELAY_MS = 16;
 
 type MotionMode = "swap" | "open" | "close";
 
+function cardSpring(mode: MotionMode) {
+  if (mode === "swap") return cardSwap;
+  if (mode === "close") return cardClose;
+  return cardOpen;
+}
+
+function mediaShift() {
+  if (typeof window === "undefined") return 315;
+  return 0.5 * (window.innerWidth - 810);
+}
+
+type ImageMotion = { mode: MotionMode; dir: 1 | -1 };
+
+const contentEnter = {
+  y: { duration: 0.4, ease: easeInOut },
+  opacity: { duration: 0.6, ease: easeInOut, delay: 0.25 },
+};
+const contentExit = {
+  y: { duration: 0.4, ease: easeInOut },
+  opacity: { duration: 0.3, ease: easeInOut },
+};
+
+const labelEnter = {
+  opacity: { duration: 0.3, ease: easeOut, delay: 0.2 },
+  scale: { duration: 0.3, ease: easeOut, delay: 0.2 },
+};
+
 const imageVariants = {
-  enter: (mode: MotionMode) => {
+  enter: ({ mode, dir }: ImageMotion) => {
     if (mode === "swap") {
-      return { x: "22%", scale: 1.05, z: 48, rotateY: -4, opacity: 1, zIndex: 2 };
-    }
-    if (mode === "open") {
+      const shift = mediaShift();
       return {
-        x: 0,
-        scale: 1.08,
-        z: 180,
+        x: dir * shift,
+        scale: dir > 0 ? 0.83333 : 1.2,
+        z: 0,
         rotateY: 0,
         opacity: 0,
-        zIndex: 1,
-        transition: { duration: 0.38, ease: swapEase },
+        zIndex: 2,
       };
+    }
+    if (mode === "open") {
+      return { x: 0, scale: 0.83333, z: 0, rotateY: 0, opacity: 0, zIndex: 1 };
     }
     return { x: 0, scale: 1, z: 0, rotateY: 0, opacity: 0, zIndex: 0 };
   },
-  center: { x: 0, scale: 1, z: 0, rotateY: 0, opacity: 1, zIndex: 1 },
-  exit: (mode: MotionMode) => {
+  center: ({ mode }: ImageMotion) => ({
+    x: 0,
+    scale: 1,
+    z: 0,
+    rotateY: 0,
+    opacity: 1,
+    zIndex: 1,
+    transition:
+      mode === "swap"
+        ? { x: scaleMove, scale: scaleMove, opacity: fadeMove }
+        : { x: scaleMove, scale: scaleIn, opacity: fadeMove },
+  }),
+  exit: ({ mode, dir }: ImageMotion) => {
     if (mode === "swap") {
+      const shift = mediaShift();
       return {
-        x: "-18%",
-        scale: 0.9,
-        z: -90,
-        rotateY: 5,
+        x: -dir * shift,
+        scale: dir > 0 ? 0.83333 : 1.2,
+        z: 0,
+        rotateY: 0,
         opacity: 0,
         zIndex: 0,
-        transition: {
-          duration: 0.45,
-          ease: swapEase,
-          opacity: { duration: 0.28, ease: "easeOut" },
-        },
+        transition: { x: scaleMove, scale: scaleMove, opacity: fadeMove },
       };
     }
     if (mode === "close") {
       return {
         x: 0,
-        scale: 1.08,
-        z: 180,
+        scale: 0.83333,
+        z: 0,
         rotateY: 0,
         opacity: 0,
         zIndex: 1,
-        transition: { duration: 0.38, ease: swapEase },
+        transition: { scale: scaleMove, opacity: fadeMove },
       };
     }
-    return { x: 0, scale: 1, z: 0, rotateY: 0, opacity: 0, zIndex: 0 };
+    return {
+      x: 0,
+      scale: 1.2,
+      z: 0,
+      rotateY: 0,
+      opacity: 0,
+      zIndex: 0,
+      transition: { scale: scaleIn, opacity: fadeMove },
+    };
   },
 };
 
@@ -195,18 +256,25 @@ function PillFrame({
   children,
   frostSrc,
   stageRef,
+  transition,
+  layoutEnabled = true,
+  pillRef,
 }: {
   isOpen: boolean;
   className?: string;
   children: React.ReactNode;
   frostSrc?: string;
   stageRef?: RefObject<HTMLElement | null>;
+  transition: typeof cardOpen;
+  layoutEnabled?: boolean;
+  pillRef?: (node: HTMLDivElement | null) => void;
 }) {
   return (
     <motion.div
-      layout
-      transition={layoutDrawer}
-      style={{ borderRadius: "var(--project-radius)", originX: 0, originY: 0 }}
+      ref={pillRef}
+      layout={layoutEnabled}
+      transition={transition}
+      style={{ borderRadius: "28px", originX: 0, originY: 0 }}
       className={`relative overflow-hidden text-white ${isOpen ? "" : "project-pill-closed"} ${className ?? ""}`}
     >
       {isOpen && frostSrc && stageRef ? (
@@ -214,7 +282,7 @@ function PillFrame({
       ) : (
         <div aria-hidden className="pointer-events-none absolute inset-0 project-pill" />
       )}
-      <motion.div layout transition={layoutDrawer} className="relative">
+      <motion.div layout={layoutEnabled} transition={transition} className="relative">
         {children}
       </motion.div>
     </motion.div>
@@ -225,29 +293,42 @@ function ExpandedBody({
   project,
   revealed,
   fromY,
+  scope,
+  exiting = false,
 }: {
   project: Project;
   revealed: boolean;
   fromY: number;
+  scope: "mobile" | "desktop";
+  exiting?: boolean;
 }) {
   return (
     <motion.div
       key={`${project.id}-reveal`}
-      initial={{ opacity: 0, x: 0, y: fromY }}
-      animate={revealed ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: 0, y: fromY }}
-      transition={revealed ? revealSpring : { duration: 0 }}
+      initial={exiting ? { opacity: 1, y: 0 } : { opacity: 0, x: 0, y: fromY }}
+      animate={
+        exiting
+          ? { opacity: 0, y: CONTENT_OFFSET }
+          : revealed
+            ? { opacity: 1, x: 0, y: 0 }
+            : { opacity: 0, x: 0, y: fromY }
+      }
+      transition={exiting ? contentExit : revealed ? contentEnter : { duration: 0 }}
       transformTemplate={({ y }) => `translateY(${y ?? 0})`}
-      className={revealed ? undefined : "invisible"}
+      className={exiting || revealed ? undefined : "invisible"}
     >
-      <p
+      <LocaleFade
+        as="p"
         id={`project-tab-${project.id}`}
+        fadeKey={`project-copy-${scope}-${project.id}`}
+        text={`${project.name}\n${project.description}`}
         className="text-[13px] leading-[1.4] font-normal tracking-[-0.16px] text-body-muted desktop:text-body"
       >
         <span className="font-semibold tracking-[-0.16px] text-white desktop:tracking-[-0.374px]">
           {project.name}.{" "}
         </span>
         <span className="text-white">{project.description}</span>
-      </p>
+      </LocaleFade>
       <ul className="no-scrollbar mt-2.5 flex gap-1.5 overflow-x-auto desktop:mt-4 desktop:flex-wrap desktop:gap-2 desktop:overflow-visible">
         {project.stack.map((s) => (
           <li
@@ -270,10 +351,13 @@ export function Projects() {
   const [revealed, setRevealed] = useState(false);
   const [collapsingId, setCollapsingId] = useState<string | null>(null);
   const [mode, setMode] = useState<MotionMode>("open");
-  const [fromY, setFromY] = useState(-6);
+  const [dir, setDir] = useState<1 | -1>(1);
+  const [fromY, setFromY] = useState(CONTENT_OFFSET);
+  const [exitingId, setExitingId] = useState<string | null>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const swipeX = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const pillRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const choose = (id: string | null) => {
     if (selected !== null && id !== null) setMode("swap");
@@ -282,12 +366,37 @@ export function Projects() {
     if (id !== null) {
       const fromIndex = selected ? projects.findIndex((p) => p.id === selected) : -1;
       const toIndex = projects.findIndex((p) => p.id === id);
-      setFromY(fromIndex !== -1 && toIndex < fromIndex ? 6 : -6);
+      setDir(fromIndex !== -1 && toIndex < fromIndex ? -1 : 1);
+      setFromY(CONTENT_OFFSET);
+      setExitingId(null);
+    } else if (selected) {
+      setExitingId(selected);
     }
     setCollapsingId(selected);
     setRevealed(false);
     setSelected(id);
   };
+
+  useEffect(() => {
+    if (!exitingId) return;
+    const id = exitingId;
+    const timer = window.setTimeout(() => {
+      setExitingId((current) => (current === id ? null : current));
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [exitingId]);
+
+  useEffect(() => {
+    if (selected !== null || exitingId) return;
+    const timer = window.setTimeout(() => {
+      for (const node of Object.values(pillRefs.current)) {
+        if (!node) continue;
+        node.style.borderRadius = "28px";
+        node.style.clipPath = "";
+      }
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [selected, exitingId]);
 
   useEffect(() => {
     if (!selected) return;
@@ -342,15 +451,19 @@ export function Projects() {
     >
       <div className="mx-auto flex w-full max-w-360 flex-col">
         <header className="mb-5 px-5 desktop:mb-10 desktop:px-0 desktop:pl-24">
-          <h2
+          <LocaleFade
+            as="h2"
             id="projects"
+            fadeKey="projects-title"
+            text={t("title")}
             className="nav-anchor text-display-md leading-[1.1] font-semibold tracking-tight desktop:text-display-lg"
-          >
-            {t("title")}
-          </h2>
-          <p className="mt-2 max-w-xl text-[15px] leading-[1.4] tracking-[-0.24px] text-body-muted desktop:mt-3 desktop:text-body">
-            {t("lede")}
-          </p>
+          />
+          <LocaleFade
+            as="p"
+            fadeKey="projects-lede"
+            text={t("lede")}
+            className="mt-2 max-w-xl text-[15px] leading-[1.4] tracking-[-0.24px] text-body-muted desktop:mt-3 desktop:text-body"
+          />
         </header>
 
         <div
@@ -364,19 +477,14 @@ export function Projects() {
               onPointerDown={onSwipeStart}
               onPointerUp={onSwipeEnd}
             >
-              <AnimatePresence initial={false} mode="sync" custom={mode}>
+              <AnimatePresence initial={false} mode="sync" custom={{ mode, dir }}>
                 <motion.div
                   key={hasSelection ? preview.id : "idle"}
-                  custom={mode}
+                  custom={{ mode, dir }}
                   variants={imageVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={
-                    mode === "swap"
-                      ? { duration: 0.7, ease: swapEase }
-                      : { duration: 0.38, ease: swapEase }
-                  }
                   className="pointer-events-none absolute inset-0"
                   style={{ transformStyle: "preserve-3d", transformOrigin: "50% 40%" }}
                 >
@@ -396,11 +504,16 @@ export function Projects() {
                 aria-hidden={!hasSelection}
                 tabIndex={hasSelection ? 0 : -1}
                 onClick={() => choose(null)}
-                className={`btn-icon-circle absolute top-4 right-4 z-20 size-10 transition-[opacity,transform] ${
+                className={`btn-icon-circle absolute top-4 right-4 z-20 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0,0,0.58,1)] ${
                   hasSelection ? "opacity-100" : "pointer-events-none opacity-0"
                 }`}
+                style={
+                  hasSelection
+                    ? { transform: "scale(1)", transition: "opacity 500ms cubic-bezier(0, 0, 0.58, 1), transform 0s" }
+                    : { transform: "scale(0)", transition: "transform 110ms linear, opacity 110ms linear" }
+                }
               >
-                <X className="size-3.5" size={14} strokeWidth={2.25} absoluteStrokeWidth />
+                <X className="size-5" size={20} strokeWidth={3} absoluteStrokeWidth />
               </button>
             </div>
 
@@ -418,24 +531,26 @@ export function Projects() {
                     aria-label={t("previousProject")}
                     disabled={selectedIndex <= 0}
                     onClick={() => selectAt(selectedIndex - 1)}
-                    className="btn-icon-circle size-10"
+                    className="btn-icon-circle"
                   >
-                    <ChevronLeft className="size-4" strokeWidth={2.5} />
+                    <ChevronLeft className="size-6" size={24} strokeWidth={3.5} absoluteStrokeWidth />
                   </button>
                 ) : null}
 
                 {projects.map((p) => {
                   const isOpen = p.id === selected;
+                  const exiting = p.id === exitingId;
                   if (hasSelection && !isOpen) return null;
                   return (
                     <PillFrame
                       key={p.id}
                       isOpen={isOpen}
+                      transition={exiting ? cardClose : cardSpring(mode)}
                       className={isOpen ? "min-w-0 flex-1" : "shrink-0"}
                     >
                       {isOpen ? (
                         <div className="px-3.5 py-3">
-                          <ExpandedBody project={p} revealed={revealed} fromY={fromY} />
+                          <ExpandedBody project={p} revealed={revealed} fromY={fromY} scope="mobile" />
                         </div>
                       ) : (
                         <button
@@ -452,9 +567,11 @@ export function Projects() {
                               aria-hidden
                             />
                           </span>
-                          <span className="text-[13px] leading-[1.2] font-semibold tracking-[-0.16px] whitespace-nowrap text-white">
-                            {p.name}
-                          </span>
+                          <LocaleFade
+                            fadeKey={`project-name-mobile-${p.id}`}
+                            text={p.name}
+                            className={`text-[13px] leading-[1.2] font-semibold tracking-[-0.16px] whitespace-nowrap text-white ${exiting ? "opacity-0" : ""}`}
+                          />
                         </button>
                       )}
                     </PillFrame>
@@ -467,9 +584,9 @@ export function Projects() {
                     aria-label={t("nextProject")}
                     disabled={selectedIndex >= projects.length - 1}
                     onClick={() => selectAt(selectedIndex + 1)}
-                    className="btn-icon-circle size-10"
+                    className="btn-icon-circle"
                   >
-                    <ChevronRight className="size-4" strokeWidth={2.5} />
+                    <ChevronRight className="size-6" size={24} strokeWidth={3.5} absoluteStrokeWidth />
                   </button>
                 ) : null}
               </div>
@@ -481,19 +598,14 @@ export function Projects() {
             className="pointer-events-none absolute inset-0 z-0 hidden overflow-hidden desktop:block desktop:rounded-(--project-radius)"
             style={{ perspective: 2400 }}
           >
-            <AnimatePresence initial={false} mode="sync" custom={mode}>
+            <AnimatePresence initial={false} mode="sync" custom={{ mode, dir }}>
               <motion.div
                 key={hasSelection ? preview.id : "idle"}
-                custom={mode}
+                custom={{ mode, dir }}
                 variants={imageVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={
-                  mode === "swap"
-                    ? { duration: 0.7, ease: swapEase }
-                    : { duration: 0.38, ease: swapEase }
-                }
                 className="pointer-events-none absolute inset-0"
                 style={{ transformStyle: "preserve-3d", transformOrigin: "70% 50%" }}
               >
@@ -508,17 +620,22 @@ export function Projects() {
             aria-hidden={!hasSelection}
             tabIndex={hasSelection ? 0 : -1}
             onClick={() => choose(null)}
-            className={`btn-icon-circle absolute top-6 right-6 z-20 hidden transition-[opacity,transform] desktop:grid ${
+            className={`btn-icon-circle absolute top-6 right-6 z-20 hidden transition-[opacity,transform] duration-500 ease-[cubic-bezier(0,0,0.58,1)] desktop:grid ${
               hasSelection ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
+            style={
+              hasSelection
+                ? { transform: "scale(1)", transition: "opacity 500ms cubic-bezier(0, 0, 0.58, 1), transform 0s" }
+                : { transform: "scale(0)", transition: "transform 110ms linear, opacity 110ms linear" }
+            }
           >
-            <X className="size-4" size={16} strokeWidth={2.25} absoluteStrokeWidth />
+            <X className="size-5" size={20} strokeWidth={3} absoluteStrokeWidth />
           </button>
 
-          <div className="relative z-10 hidden h-full flex-col px-0 pb-5 desktop:absolute desktop:inset-0 desktop:flex desktop:flex-row desktop:items-center desktop:justify-start desktop:gap-6 desktop:px-6 desktop:pb-0">
+          <div className="relative z-10 hidden h-full flex-col px-0 pb-5 desktop:absolute desktop:inset-0 desktop:flex desktop:flex-row desktop:items-center desktop:justify-start desktop:gap-8 desktop:px-6 desktop:pb-0">
             <div
               aria-hidden={!hasSelection}
-              className={`hidden w-11 shrink-0 flex-col gap-3 transition-opacity duration-200 desktop:flex ${
+              className={`hidden w-9 shrink-0 flex-col gap-3 transition-opacity duration-500 ease-[cubic-bezier(0,0,0.58,1)] desktop:flex ${
                 hasSelection ? "opacity-100" : "pointer-events-none opacity-0"
               }`}
             >
@@ -530,7 +647,7 @@ export function Projects() {
                 onClick={() => selectAt(selectedIndex - 1)}
                 className="btn-icon-circle"
               >
-                <ChevronUp className="size-5" strokeWidth={2.5} />
+                <ChevronUp className="size-6" size={24} strokeWidth={3.5} absoluteStrokeWidth />
               </button>
               <button
                 type="button"
@@ -540,7 +657,7 @@ export function Projects() {
                 onClick={() => selectAt(selectedIndex + 1)}
                 className="btn-icon-circle"
               >
-                <ChevronDown className="size-5" strokeWidth={2.5} />
+                <ChevronDown className="size-6" size={24} strokeWidth={3.5} absoluteStrokeWidth />
               </button>
             </div>
 
@@ -548,13 +665,19 @@ export function Projects() {
               <ul className="hidden w-full flex-col gap-2.5 desktop:flex desktop:gap-3">
                 {projects.map((p, i) => {
                   const isOpen = p.id === selected;
+                  const exiting = p.id === exitingId;
                   const isCollapsing = p.id === collapsingId;
                   return (
-                    <motion.li key={p.id} layout transition={layoutDrawer}>
+                    <motion.li key={p.id} layout transition={cardSpring(mode)}>
                       <PillFrame
                         isOpen={isOpen}
-                        frostSrc={isOpen ? preview.image : undefined}
-                        stageRef={stageRef}
+                        layoutEnabled
+                        pillRef={(node) => {
+                          pillRefs.current[p.id] = node;
+                        }}
+                        transition={exiting ? cardClose : cardSpring(mode)}
+                        frostSrc={isOpen ? p.image : undefined}
+                        stageRef={isOpen ? stageRef : undefined}
                         className={`w-full desktop:w-fit ${
                           isOpen ? "desktop:max-w-[42cqw]" : "desktop:max-w-[85cqw]"
                         }`}
@@ -565,7 +688,7 @@ export function Projects() {
                             aria-labelledby={`project-tab-${p.id}`}
                             className="px-5 py-5 desktop:px-7 desktop:py-6"
                           >
-                            <ExpandedBody project={p} revealed={revealed} fromY={fromY} />
+                            <ExpandedBody project={p} revealed={revealed} fromY={fromY} scope="desktop" />
                           </div>
                         ) : (
                           <button
@@ -583,12 +706,14 @@ export function Projects() {
                               className="flex min-w-0 items-center gap-3"
                               initial={false}
                               animate={
-                                isCollapsing
-                                  ? { opacity: 0, x: 0, y: 8 }
-                                  : { opacity: 1, x: 0, y: 0 }
+                                exiting || isCollapsing
+                                  ? { opacity: 0, y: 0 }
+                                  : { opacity: 1, y: 0 }
                               }
-                              transition={isCollapsing ? { duration: 0 } : revealSpring}
-                              transformTemplate={({ y }) => `translateY(${y ?? 0})`}
+                              transition={exiting || isCollapsing ? { duration: 0 } : labelEnter}
+                              transformTemplate={({ y, scale }) =>
+                                `translateY(${y ?? 0}) scale(${scale ?? 1})`
+                              }
                             >
                               <span className="grid size-6 shrink-0 place-items-center rounded-full border border-white/90">
                                 <Plus
@@ -599,9 +724,12 @@ export function Projects() {
                                   aria-hidden
                                 />
                               </span>
-                              <span className="min-w-0 text-body-strong text-white desktop:truncate">
-                                {p.name}
-                              </span>
+                              <LocaleFade
+                                block
+                                fadeKey={`project-name-desktop-${p.id}`}
+                                text={p.name}
+                                className="min-w-0 text-body-strong text-white desktop:truncate"
+                              />
                             </motion.span>
                           </button>
                         )}

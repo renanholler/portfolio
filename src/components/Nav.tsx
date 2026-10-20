@@ -1,5 +1,6 @@
 "use client";
 
+import { LocaleFade } from "@/components/LocaleFade";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -147,7 +148,7 @@ export function Nav() {
                         aria-current={isActive ? "true" : undefined}
                         className={`${linkClass} ${isActive ? "text-current" : "text-current/80"}`}
                       >
-                        {l.label}
+                        <LocaleFade fadeKey={`nav-desktop-${l.href}`} text={l.label} />
                       </a>
                       {isActive ? (
                         <motion.span
@@ -196,7 +197,7 @@ export function Nav() {
                         className="nav-link flex min-h-14 translate-y-2 items-center py-3 text-lead font-semibold text-current opacity-0 transition-[opacity,transform] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                       >
                         <span className="relative">
-                          {l.label}
+                          <LocaleFade fadeKey={`nav-mobile-${l.href}`} text={l.label} />
                           {isActive ? (
                             <motion.span
                               layoutId="nav-ink-mobile"

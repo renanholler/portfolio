@@ -512,13 +512,13 @@
   outline-offset: 2px;
 }
 
-/* {component.button-icon-circular} — 44px frost chip floating over photography */
+/* {component.button-icon-circular} — 36px frost chip, matching Apple gallery controls */
 @utility btn-icon-circle {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
   background: var(--frost);
   color: rgb(255 255 255);

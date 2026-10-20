@@ -1,5 +1,6 @@
 "use client";
 
+import { markLocaleArrived, startLocaleSequence } from "@/components/LocaleFade";
 import { localeLabels, type Locale } from "@/i18n/routing";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -19,6 +20,7 @@ export function LocaleSwitcher({ groupId }: { groupId: string }) {
 
   useEffect(() => {
     setSelected(locale);
+    markLocaleArrived();
   }, [locale]);
 
   const nextLocale: Locale = selected === "en" ? "pt" : "en";
@@ -33,6 +35,7 @@ export function LocaleSwitcher({ groupId }: { groupId: string }) {
         className={switcherClass}
         onClick={() => {
           setSelected(nextLocale);
+          startLocaleSequence();
           router.replace(pathname, { locale: nextLocale });
         }}
       >

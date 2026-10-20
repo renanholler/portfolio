@@ -1,5 +1,6 @@
 "use client";
 
+import { LocaleFade } from "@/components/LocaleFade";
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
@@ -33,11 +34,12 @@ export function Reveal({
 
 export function SectionHeading({ title, id }: { title: string; id?: string }) {
   return (
-    <h2
+    <LocaleFade
+      as="h2"
       id={id}
+      fadeKey={id ? `section-${id}` : "section-heading"}
+      text={title}
       className={`mb-8 font-display text-[28px] leading-[1.1] font-semibold tracking-tight desktop:mb-14 desktop:text-display-lg${id ? " nav-anchor" : ""}`}
-    >
-      {title}
-    </h2>
+    />
   );
 }

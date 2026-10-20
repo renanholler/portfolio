@@ -1,10 +1,10 @@
 import { HeroActions } from "@/components/HeroActions";
 import { HorizontalScroll, ScrollSlide } from "@/components/HorizontalScroll";
+import { LocaleFade, LocationLine } from "@/components/LocaleFade";
 import { Reveal, SectionHeading } from "@/components/Reveal";
 import { TechIcon } from "@/components/TechIcon";
 import { getPortfolio } from "@/data/get-portfolio";
 import { type Locale } from "@/i18n/routing";
-import { MapPin } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 
@@ -24,19 +24,23 @@ export async function Hero() {
             </h1>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="mt-2 font-display text-[21px] leading-[1.19] font-normal tracking-[0.231px] desktop:mt-3 desktop:text-lead">
-              {t("role")}
-            </p>
+            <LocaleFade
+              as="p"
+              fadeKey="hero-role"
+              text={t("role")}
+              className="mt-2 font-display text-[21px] leading-[1.19] font-normal tracking-[0.231px] desktop:mt-3 desktop:text-lead"
+            />
           </Reveal>
           <Reveal delay={0.15}>
-            <p className="mt-5 max-w-2xl text-body leading-[1.53] text-foreground desktop:mt-6 desktop:leading-[1.47]">
-              {t("bio")}
-            </p>
+            <LocaleFade
+              as="p"
+              fadeKey="hero-bio"
+              text={t("bio")}
+              className="mt-5 max-w-2xl text-body leading-[1.53] text-foreground desktop:mt-6 desktop:leading-[1.47]"
+            />
           </Reveal>
           <Reveal delay={0.2}>
-            <p className="mt-4 inline-flex items-center gap-2 text-fine-print text-muted-foreground">
-              <MapPin className="size-3.5" /> {t("location")}
-            </p>
+            <LocationLine text={t("location")} />
           </Reveal>
           <Reveal delay={0.25}>
             <HeroActions />
@@ -79,14 +83,59 @@ function TechTags({ items }: { items: string[] }) {
   );
 }
 
-function JobHighlights({ items }: { items: string[] }) {
+function JobHighlights({ items, fadeKeyPrefix }: { items: string[]; fadeKeyPrefix: string }) {
   return (
     <ul className="list-highlights" role="list">
-      {items.map((item) => (
-        <li key={item}>{item}</li>
+      {items.map((item, index) => (
+        <li key={index}>
+          <LocaleFade block fadeKey={`${fadeKeyPrefix}-${index}`} text={item} />
+        </li>
       ))}
     </ul>
   );
+}
+
+function ExperienceCopy({
+  job,
+  scope,
+}: {
+  job: ReturnType<typeof getPortfolio>["experience"][number];
+  scope: "mobile" | "desktop";
+}) {
+  return (
+    <>
+      <LocaleFade
+        as="p"
+        fadeKey={`exp-${scope}-${job.company}-period`}
+        text={job.period}
+        className="text-[13px] leading-[1.23] tracking-[-0.08px] text-muted-foreground"
+      />
+      <LocaleFade
+        as="h3"
+        fadeKey={`exp-${scope}-${job.company}-role`}
+        text={job.role}
+        className="mt-2 text-tagline"
+      />
+      <LocaleFade
+        as="p"
+        fadeKey={`exp-${scope}-${job.company}-company`}
+        text={job.company}
+        className="mt-1 text-body text-ink-muted"
+      />
+      <TechTags items={job.stack.split(",").map((s) => s.trim())} />
+      <JobHighlights items={job.bullets} fadeKeyPrefix={`exp-${scope}-${job.company}-bullet`} />
+    </>
+  );
+}
+
+function skillGroupLabelId(title: string) {
+  const slug = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `skill-group-${slug}`;
 }
 
 function SkillGroups({
@@ -101,29 +150,30 @@ function SkillGroups({
   return (
     <div className="mt-6 overflow-visible desktop:mt-8">
       <HorizontalScroll desktopScroll bleed={false} prevLabel={prevLabel} nextLabel={nextLabel}>
-        {skills.map((group) => (
-          <ScrollSlide key={group.title} desktopScroll>
-            <div className="h-full w-full rounded-lg border border-hairline bg-card">
-              <div className="px-4 pt-4 pb-2">
-                <h4 className="text-[13px] leading-[1.23] font-normal tracking-[-0.08px] text-muted-foreground">
-                  {group.title}
-                </h4>
+        {skills.map((group, index) => {
+          const labelId = skillGroupLabelId(group.title);
+          return (
+            <ScrollSlide key={group.title} desktopScroll className="flex flex-col">
+              <div className="w-full flex-1 rounded-lg border border-hairline bg-card">
+                <ul aria-labelledby={labelId}>
+                  {group.items.map((item, j) => (
+                    <li key={item} className={j > 0 ? "border-t border-hairline" : undefined}>
+                      <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">
+                        <TechIcon name={item} className="size-5.5 shrink-0" />
+                        <span className="min-w-0 text-body text-foreground">
+                          {item}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul>
-                {group.items.map((item, j) => (
-                  <li key={item} className={j > 0 ? "border-t border-hairline" : undefined}>
-                    <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">
-                      <TechIcon name={item} className="size-5.5 shrink-0" />
-                      <span className="min-w-0 text-body text-foreground">
-                        {item}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </ScrollSlide>
-        ))}
+              <p id={labelId} className="mt-2 text-caption text-muted-foreground">
+                <LocaleFade fadeKey={`skill-caption-${index}`} text={group.title} />
+              </p>
+            </ScrollSlide>
+          );
+        })}
       </HorizontalScroll>
     </div>
   );
@@ -150,21 +200,30 @@ export async function About() {
           <SectionHeading id="about" title={t("title")} />
         </Reveal>
         <Reveal delay={0.05}>
-          <p className="max-w-3xl text-body text-foreground">
-            {t("bio")}
-          </p>
+          <LocaleFade
+            as="p"
+            fadeKey="about-bio"
+            text={t("bio")}
+            className="max-w-3xl text-body text-foreground"
+          />
         </Reveal>
         <HorizontalScroll className="mt-10 desktop:mt-12 desktop:grid desktop:grid-cols-3 desktop:gap-6">
           {stats.map((s, i) => (
             <ScrollSlide key={s.label} width="sm">
               <Reveal delay={0.05 * i}>
                 <div className="card-utility h-full">
-                  <p className="text-lead font-semibold tracking-tight">
-                    {s.value}
-                  </p>
-                  <p className="mt-2 text-caption text-muted-foreground">
-                    {s.label}
-                  </p>
+                  <LocaleFade
+                    as="p"
+                    fadeKey={`about-stat-${i}-value`}
+                    text={s.value}
+                    className="text-lead font-semibold tracking-tight"
+                  />
+                  <LocaleFade
+                    as="p"
+                    fadeKey={`about-stat-${i}-label`}
+                    text={s.label}
+                    className="mt-2 text-caption text-muted-foreground"
+                  />
                 </div>
               </Reveal>
             </ScrollSlide>
@@ -172,12 +231,13 @@ export async function About() {
         </HorizontalScroll>
         <div className="mt-12 overflow-visible border-t border-hairline pt-12 desktop:mt-16 desktop:pt-16">
           <Reveal delay={0.1}>
-            <h3
+            <LocaleFade
+              as="h3"
               id="skills"
+              fadeKey="skills-title"
+              text={t("skillsTitle")}
               className="text-tagline"
-            >
-              {t("skillsTitle")}
-            </h3>
+            />
           </Reveal>
           <SkillGroups
             skills={skills}
@@ -209,38 +269,18 @@ export async function Experience() {
             <ScrollSlide key={job.company} width="lg">
               <Reveal delay={0.05 * i}>
                 <article className="h-full rounded-lg border border-hairline bg-card px-5 py-6">
-                  <p className="text-[13px] leading-[1.23] tracking-[-0.08px] text-muted-foreground">
-                    {job.period}
-                  </p>
-                  <h3 className="mt-2 text-tagline">
-                    {job.role}
-                  </h3>
-                  <p className="mt-1 text-body text-ink-muted">
-                    {job.company}
-                  </p>
-                  <TechTags items={job.stack.split(",").map((s) => s.trim())} />
-                  <JobHighlights items={job.bullets} />
+                  <ExperienceCopy job={job} scope="mobile" />
                 </article>
               </Reveal>
             </ScrollSlide>
           ))}
         </HorizontalScroll>
 
-        <ol className="hidden desktop:block desktop:border-y desktop:border-hairline">
+        <ol className="hidden desktop:block">
           {experience.map((job, i) => (
             <Reveal key={job.company} delay={0.05 * i}>
               <li className="border-t border-hairline px-1 py-10 first:border-t-0 desktop:py-12">
-                <p className="text-[13px] leading-[1.23] tracking-[-0.08px] text-muted-foreground">
-                  {job.period}
-                </p>
-                <h3 className="mt-2 text-tagline">
-                  {job.role}
-                </h3>
-                <p className="mt-1 text-body text-ink-muted">
-                  {job.company}
-                </p>
-                <TechTags items={job.stack.split(",").map((s) => s.trim())} />
-                <JobHighlights items={job.bullets} />
+                <ExperienceCopy job={job} scope="desktop" />
               </li>
             </Reveal>
           ))}
